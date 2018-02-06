@@ -1,7 +1,10 @@
 import urllib.request
 from lxml import etree
 import time
+import xlwt
 
+workbook = xlwt.Workbook(encoding='utf-8')
+worksheet = workbook.add_sheet('data')
 
 
 def get_url(url):     # 国内高匿代理的链接
@@ -13,7 +16,8 @@ def get_url(url):     # 国内高匿代理的链接
 
 
 def get_content(url):     # 获取网页内容
-    user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.22 Safari/537.36 SE 2.X MetaSr 1.0'
+    user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 ' \
+                 '(KHTML, like Gecko) Chrome/49.0.2623.22 Safari/537.36 SE 2.X MetaSr 1.0'
     headers = {'User-Agent': user_agent}
     req = urllib.request.Request(url=url, headers=headers)
     res = urllib.request.urlopen(req)
@@ -21,9 +25,33 @@ def get_content(url):     # 获取网页内容
     return content.decode('utf-8')
 
 
-def get_info(content):      # 提取网页信息 / ip 端口
+def xlwtadd(x,y,z):
+    worksheet.write(x,y,label=z)
+    workbook.save('datas.xls')
+
+
+def get_info(content):      # 提取网页信息
+    #  / ip 端口
     datas_ip = etree.HTML(content).xpath('//*[@id="ip_list"]/tr/td[2]/text()')
     datas_port = etree.HTML(content).xpath('//*[@id="ip_list"]/tr/td[3]/text()')
+    datas_address = etree.HTML(content).xpath('//*[@id="ip_list"]/tr/td[4]/text()')
+    datas_isgao = etree.HTML(content).xpath('//*[@id="ip_list"]/tr/td[5]/text()')
+    datas_type = etree.HTML(content).xpath('//*[@id="ip_list"]/tr/td[6]/text()')
+    xlwtadd(0, 1, 'ip')
+    xlwtadd(0, 2, 'port')
+    xlwtadd(0, 3, '地区')
+    xlwtadd(0, 4, '是否匿名')
+    xlwtadd(0, 0, '类型')
+    print(datas_address)
+    for i in range(0,len(datas_ip)):
+        xlwtadd(i + 1, 0, datas_type[i])
+        xlwtadd(i + 1, 1, datas_ip[i])
+        xlwtadd(i + 1, 2, datas_port[i])
+        xlwtadd(i + 1, 3, datas_address[i])
+        xlwtadd(i + 1, 4, datas_isgao[i])
+
+
+
     with open("data.txt", "w") as fd:
         for i in range(0,len(datas_ip)):
             out = u""
@@ -33,7 +61,8 @@ def get_info(content):      # 提取网页信息 / ip 端口
             print(out)
 
 def verif_ip(ip, port):  # 验证ip有效性
-    user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.22 Safari/537.36 SE 2.X MetaSr 1.0'
+    user_agent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36' \
+                 ' (KHTML, like Gecko) Chrome/49.0.2623.22 Safari/537.36 SE 2.X MetaSr 1.0'
     headers = {'User-Agent': user_agent}
     proxy = {'http': 'http://%s:%s' % (ip, port)}
     print(proxy)
@@ -73,5 +102,4 @@ if __name__ == '__main__':
         datas = fd.readlines()
         for data in datas:
             print(data.split(u":")[0])
-        # print('%d : %d'%(out[0],out[1]))
             verif_ip(data.split(u":")[0],data.split(u":")[1])
